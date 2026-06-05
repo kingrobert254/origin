@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard Chef / Dapur</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background-color: #2c3e50; color: #fff; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #34495e; padding-bottom: 15px; margin-bottom: 20px; }
+        h2 { margin: 0; }
+        .chef-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .chef-card { background: #34495e; border-radius: 8px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); border-left: 5px solid #e67e22; }
+        .chef-card.cooking { border-left-color: #3498db; }
+        .chef-card.done { border-left-color: #2ecc71; opacity: 0.7; }
+        .order-id { font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid #4e6a85; padding-bottom: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .status-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #e67e22; }
+        .chef-card.cooking .status-badge { background: #3498db; }
+        .chef-card.done .status-badge { background: #2ecc71; }
+        ul { list-style: none; padding: 0; margin: 0 0 15px 0; }
+        li { padding: 6px 0; border-bottom: 1px dashed #4e6a85; font-size: 15px; }
+        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; font-size: 13px; width: 100%; display: block; text-align: center; text-decoration: none; margin-top: 5px; }
+        .btn-cook { background: #3498db; }
+        .btn-done { background: #2ecc71; }
+        .btn-logout { background: #dc3545; width: auto; }
+    </style>
+</head>
+<body>
+    <header>
+        <h2>👨‍🍳 Monitor Antrean Dapur (Chef Dashboard)</h2>
+        <a th:href="@{/logout}" class="btn btn-logout">Logout</a>
+    </header>
+
+    <div class="chef-grid">
+        <div th:each="order : ${orders}" th:class="'chef-card ' + ${order.status == 'SEDANG DIMASAK' ? 'cooking' : (order.status == 'SELESAI DIMASAK' ? 'done' : '')}">
+            <div class="order-id">
+                <span th:text="'#ORD-' + ${order.id}"></span>
+                <span class="status-badge" th:text="${order.status}">BARU</span>
+            </div>
+            <p style="margin: 0 0 10px 0; font-size: 13px; color: #bdc3c7;">Pemesan: <b th:text="${order.customerName}" style="color: #fff;"></b></p>
+            
+            <ul>
+                <li th:each="detail : ${order.details}">
+                    🔥 <span th:text="${detail.quantity} + 'x ' + ${detail.foodName}" style="font-weight: bold;"></span>
+                </li>
+            </ul>
+
+            <div th:if="${order.status == 'BARU'}">
+                <form th:action="@{/chef/order/update-status}" method="post">
+                    <input type="hidden" name="orderId" th:value="${order.id}">
+                    <input type="hidden" name="status" value="SEDANG DIMASAK">
+                    <button type="submit" class="btn btn-cook">🍳 Mulai Masak</button>
+                </form>
+            </div>
+            
+            <div th:if="${order.status == 'SEDANG DIMASAK'}">
+                <form th:action="@{/chef/order/update-status}" method="post">
+                    <input type="hidden" name="orderId" th:value="${order.id}">
+                    <input type="hidden" name="status" value="SELESAI DIMASAK">
+                    <button type="submit" class="btn btn-done">✅ Selesai Dimasak</button>
+                </form>
+            </div>
+            
+            <div th:if="${order.status == 'SELESAI DIMASAK'}" style="text-align: center; color: #2ecc71; font-weight: bold; padding: 5px; font-size: 14px;">
+                Makanan siap disajikan Kasir!
+            </div>
+        </div>
+    </div>
+    
+    <div th:if="${#lists.isEmpty(orders)}" style="text-align: center; padding: 40px; font-size: 1.2rem; color: #bdc3c7; width: 100%;">
+        📭 Dapur bersih! Belum ada pesanan makanan yang masuk.
+    </div>
+</body>
+</html>

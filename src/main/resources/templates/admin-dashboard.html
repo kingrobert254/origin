@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard Admin</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background-color: #f4f7f6; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 15px; margin-bottom: 20px; }
+        .admin-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 992px) { .admin-grid { grid-template-columns: 2fr 1fr; } }
+        .card-box { background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;}
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #343a40; color: white; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;}
+        input, select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; text-decoration: none; font-size: 13px; font-weight: bold; }
+        .btn-blue { background: #007bff; width: 100%; padding: 10px; margin-top: 5px; }
+        .btn-green { background: #28a745; width: 100%; padding: 10px; margin-top: 5px; }
+        .btn-info { background: #17a2b8; }
+        .btn-logout { background: #dc3545; }
+        .alert { padding: 10px; border-radius: 4px; margin-bottom: 15px; font-weight: bold; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-danger { background: #f8d7da; color: #721c24; }
+        .status-select { width: auto; padding: 5px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h2>Dashboard Utama Admin / Owner</h2>
+        <a th:href="@{/logout}" class="btn btn-logout">Logout</a>
+    </header>
+
+    <div th:if="${param.menuSuccess}" class="alert alert-success">Menu makanan baru berhasil ditambahkan!</div>
+    <div th:if="${param.menuUpdateSuccess}" class="alert alert-success">Data menu makanan berhasil diperbarui!</div>
+    <div th:if="${param.menuDeleteSuccess}" class="alert alert-success">Menu makanan berhasil dihapus dari sistem!</div>
+    <div th:if="${param.userSuccess}" class="alert alert-success">Karyawan/User baru berhasil didaftarkan!</div>
+    <div th:if="${param.userError == 'duplicate'}" class="alert alert-danger">Gagal! Username tersebut sudah digunakan.</div>
+
+    <div class="admin-grid">
+        <div>
+            <div class="card-box">
+                <h3>Daftar Transaksi Aktif</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID Nota</th>
+                                <th>Pemesan</th>
+                                <th>Total Bayar</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="order : ${orders}">
+                                <td th:text="'#ORD-' + ${order.id}"></td>
+                                <td th:text="${order.customerName}"></td>
+                                <td th:text="'Rp ' + ${#numbers.formatDecimal(order.grandTotal, 0, 'POINT', 0, 'COMMA')}"></td>
+                                <td th:text="${order.status}" style="font-weight:bold; color:#007bff;"></td>
+                                <td>
+                                    <form th:action="@{/admin/order/update-status}" method="post" style="display: inline-flex; gap: 5px;">
+                                        <input type="hidden" name="orderId" th:value="${order.id}">
+                                        <select name="status" class="status-select">
+                                            <option value="BARU" th:selected="${order.status == 'BARU'}">BARU</option>
+                                            <option value="SEDANG DIMASAK" th:selected="${order.status == 'SEDANG DIMASAK'}">SEDANG DIMASAK</option>
+                                            <option value="SELESAI DIMASAK" th:selected="${order.status == 'SELESAI DIMASAK'}">SELESAI DIMASAK</option>
+                                            <option value="SELESAI" th:selected="${order.status == 'SELESAI'}">SELESAI (Hapus)</option>
+                                        </select>
+                                        <button type="submit" class="btn" style="background:#28a745;">Set</button>
+                                    </form>
+                                    <a th:href="@{'/admin/order/detail/' + ${order.id}}" class="btn btn-info">🔍 Detail</a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(orders)}">
+                                <td colspan="5" style="text-align: center; color: #777;">Tidak ada pesanan aktif saat ini.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card-box" style="border-top: 4px solid #28a745;">
+                <h3>Pendaftaran Karyawan Baru</h3>
+                <form th:action="@{/admin/user/add}" method="post">
+                    <div class="form-group">
+                        <label>Username Baru</label>
+                        <input type="text" name="username" placeholder="Masukkan username login..." required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" name="password" placeholder="Masukkan password..." required>
+                    </div>
+                    <div class="form-group">
+                        <label>Hak Akses / Jabatan (Role)</label>
+                        <select name="role" required>
+                            <option value="USER">USER (Pelanggan / Pelayan)</option>
+                            <option value="CHEF">CHEF (Dapur)</option>
+                            <option value="ADMIN">ADMIN (Kasir / Owner)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-green">Daftarkan Karyawan</button>
+                </form>
+            </div>
+
+            <div class="card-box" style="border-top: 4px solid #007bff;">
+                <h3>Tambah Menu Baru</h3>
+                <form th:action="@{/admin/food/add}" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label>Nama Makanan/Minuman</label>
+                        <input type="text" name="name" placeholder="Contoh: Es Teh" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Harga (Rp)</label>
+                        <input type="number" name="price" placeholder="Contoh: 5000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Pilih File Gambar Lokal</label>
+                        <input type="file" name="imageFile" accept="image/*" required style="border: none; padding: 5px 0;">
+                    </div>
+                    <button type="submit" class="btn btn-blue">Simpan ke Daftar Menu</button>
+                </form>
+            </div>
+
+            <div class="card-box" style="border-top: 4px solid #e67e22;">
+                <h3>Manajemen Menu Makanan</h3>
+                <div class="table-responsive">
+                    <table style="min-width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Menu</th>
+                                <th>Harga</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="food : ${foods}">
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <img th:src="${food.imageUrl}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
+                                        <span th:text="${food.name}"></span>
+                                    </div>
+                                </td>
+                                <td th:text="'Rp ' + ${#numbers.formatDecimal(food.price, 0, 'POINT', 0, 'COMMA')}"></td>
+                                <td>
+                                    <a th:href="@{'/admin/food/edit/' + ${food.id}}" class="btn" style="background: #e67e22; padding: 4px 8px; font-size: 11px;">Edit</a>
+                                    <a th:href="@{'/admin/food/delete/' + ${food.id}}" class="btn" style="background: #dc3545; padding: 4px 8px; font-size: 11px;" onclick="return confirm('Apakah Anda yakin ingin menghapus menu ini?')">Hapus</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

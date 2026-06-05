@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Detail Pesanan</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; }
+        .detail-card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); max-width: 700px; margin: 0 auto; }
+        .info-meta { margin-bottom: 20px; line-height: 1.6; border-bottom: 2px dashed #ddd; padding-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; }
+        .btn-back { display: inline-block; padding: 10px 15px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; font-weight: bold; }
+        .btn-back:hover { background: #5a6268; }
+    </style>
+</head>
+<body>
+    <div class="detail-card">
+        <h2>Rincian Item Pesanan</h2>
+        
+        <div class="info-meta">
+            <p><b>Nomor Nota:</b> <span th:text="'#ORD-' + ${order.id}"></span></p>
+            <p><b>Nama Pelanggan:</b> <span th:text="${order.customerName}"></span></p>
+            <p><b>Waktu Transaksi:</b> <span th:text="${#temporals.format(order.orderDate, 'dd MMMM yyyy HH:mm')}"></span></p>
+            <p><b>Status Saat Ini:</b> <span th:text="${order.status}" style="font-weight: bold; color: #007bff;"></span></p>
+        </div>
+
+        <h3>Daftar Makanan Yang Dipesan:</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama Menu</th>
+                    <th>Harga Satuan</th>
+                    <th style="text-align: center;">Jumlah</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="detail : ${details}">
+                    <td th:text="${detail.foodName}">Nasi Goreng</td>
+                    <td th:text="'Rp ' + ${#numbers.formatDecimal(detail.price, 0, 'POINT', 0, 'COMMA')}">Rp 0</td>
+                    <td th:text="${detail.quantity}" style="text-align: center;">1</td>
+                    <td th:text="'Rp ' + ${#numbers.formatDecimal(detail.subTotal, 0, 'POINT', 0, 'COMMA')}" style="font-weight: bold;">Rp 0</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="3" style="text-align: right; padding-top: 20px;">Total Pembayaran Akhir:</th>
+                    <th th:text="'Rp ' + ${#numbers.formatDecimal(order.grandTotal, 0, 'POINT', 0, 'COMMA')}" style="color: #28a745; font-size: 1.2rem; padding-top: 20px;">Rp 0</th>
+                </tr>
+            </tfoot>
+        </table>
+
+        <a th:href="@{/admin}" class="btn-back">⬅ Kembali ke Dashboard</a>
+    </div>
+</body>
+</html>
